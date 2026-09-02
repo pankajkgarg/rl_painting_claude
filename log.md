@@ -58,3 +58,11 @@ Patched trl/import_utils.py with a wrapper returning bool; same patch added to d
 try/except alias in grpo/online_dpo/rloo trainers + vllm_serve. Mirrored in env/vast_onstart.sh and docker/Dockerfile. Smoke (Qwen/Qwen3.5-4B, TRL-native, vLLM colocate) relaunched.
 ## [2026-09-02 19:00] decision | drop Unsloth for current-gen models; TRL 1.12 + PEFT + vLLM 0.27.1 colocate
 TRL 0.24 (unsloth's pin) hit 4 incompatibilities in a row (vllm_ascend phantom import, mergekit, GuidedDecodingParams rename, warnings_issued). pip install -U trl -> 1.12.0 + transformers 5.16.1; imports clean with vllm 0.27.1. Unsloth now incompatible on the box (fine: v1.1 LoRA saved). Dockerfile + onstart switched to this stack.
+## [2026-09-02 19:30] decision | debug on a 3090 (user), keep A6000 only for the 9B run
+3090 instance 49631965 ($0.12/hr, offer 48366934) created with env/vast_onstart.sh (TRL 1.12 stack, RLPAINT_MODEL=Qwen/Qwen3.5-4B). A6000 49613475 smoke (Qwen3.5-4B, micro=2) pending; if it passes -> 9B on A6000 and destroy 3090; else destroy A6000, debug on 3090. Lesson: do stack migration on the cheapest card.
+## [2026-09-02 20:00] experiment | TRL-native stack WORKS: Qwen3.5-4B 12 steps on A6000, 43 s/step, vLLM colocate
+But ok only 0-1/8: truncation at 1400 tok (Qwen3.5 writes long commented code; clipped 12-37%/step, and truncated code -> "missing )", "Unexpected token catch/}"), createCanvas at top level ("appendChild of null"), colorMode gate. Fixes: max_new 2500; colorMode -> no-op in harness (not forbidden); 9B launched on A6000 with --sleep (vllm sleep mode) micro=1 vllm_mem .45 as a one-shot memory test. 3090 #49631965 stuck pulling image -> destroyed, re-rented.
+## [2026-09-02 20:10] status | 3090 #49632685 ($0.113/hr, host 155125) bootstrapping; A6000 #49613475 running 9B sleep-mode test
+`vastai destroy` needs `echo y |` (interactive confirm). Search filter `host_id!=` breaks the query parser.
+## [2026-09-02 20:40] decision | A6000 #49613475 destroyed; 9B needs 80GB
+TRL colocate: policy (18GB bf16) loads first, then vLLM wants 0.45*47=21GB but only 11.9GB free -> ValueError. Sleep mode does not help at startup. Plan: 4B recipe validation on 3090 #49632685 ($0.11/hr), then one 9B run on an A100 80GB (~$0.95/hr) via env/vast_launch.sh GPU=80. A6000 total: ~4.9h, ~$2.35.

@@ -2,7 +2,7 @@
 # Helpers for the vast.ai box. Usage: env/vast_run.sh {push|smoke|train|poll|pull|destroy} [args]
 set -e
 cd "$(dirname "$0")/.."
-ID=${VAST_ID:-49613475}
+ID=${VAST_ID:-49632685}
 read HOST PORT <<< $(vastai show instance $ID --raw | python3 -c "import json,sys;d=json.load(sys.stdin);print(d['ssh_host'],d['ssh_port'])")
 SSH="ssh -o StrictHostKeyChecking=no -o ConnectTimeout=20 -p $PORT root@$HOST"
 SCP="scp -o StrictHostKeyChecking=no -P $PORT"

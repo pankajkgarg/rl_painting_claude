@@ -19,10 +19,11 @@ HTML = """<!doctype html><html><head><meta charset=utf-8>
 <script>
 window.__err=null;window.__done=false;
 window.addEventListener('error',e=>{window.__err=String(e.message||e.error)});
-// force fixed canvas size regardless of what the sketch asks for
-const _cc=window.createCanvas;
+// colorMode is a no-op: HSB alpha-scale trap made canvases blank; RGB 0-255 semantics always apply
+window.addEventListener('load',()=>{});
 </script>
 </head><body>
+<script>window.colorMode=function(){};</script>
 <script>
 try{
 %s
@@ -40,7 +41,7 @@ FORBIDDEN = [
     r"\bimport\b", r"\brequire\s*\(", r"\beval\s*\(", r"\bFunction\s*\(", r"\bloadJSON\b",
     r"\bloadStrings\b", r"\bloadFont\b", r"\bcreateCapture\b", r"\bsaveCanvas\b", r"\bsave\s*\(",
     r"\bwhile\s*\(\s*true\s*\)", r"\bnoCanvas\b",
-    r"\bcolorMode\b", r"\bloadPixels\b", r"\bupdatePixels\b", r"\bpixels\s*\[", r"\bset\s*\(\s*\w+\s*,\s*\w+\s*,",  # alpha-scale trap + raw pixel hacks
+    r"\bloadPixels\b", r"\bupdatePixels\b", r"\bpixels\s*\[", r"\bset\s*\(\s*\w+\s*,\s*\w+\s*,",  # alpha-scale trap + raw pixel hacks
 ]
 
 def static_check(code: str):

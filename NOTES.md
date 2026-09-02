@@ -13,11 +13,11 @@ p5.js sketches; rollouts rendered headlessly; reward = compile gate + length + a
 Goal: cheapest possible proof of concept.
 
 ## Current status
-2026-09-02 17:00: v1.1 (Qwen3-4B-Instruct-2507 + vLLM, reward_v1, 150 steps, 50 min, ~$0.40) is the first run that works:
-HPS 10.7->13.6, render ok 79%->96%; base-vs-trained eval (12/subject): ~10.0 vs ~13.4 HPS. User objects to the
-Jul-2025 model; v1.2 = Qwen3.5-9B + vLLM 0.27.1 (supported after all) queued on the same A6000. Spend $1.63 of $7.29.
-LoRAs backed up to out/lora_final, out_v1/lora_final. Repo: github.com/pankajkgarg/rl_painting_claude (private);
-workflow file held in temp/hold until `gh auth refresh -s workflow`. Deliverables pending: tweet video, writeup.
+2026-09-02 20:40: v1.1 (Qwen3-4B-Instruct-2507, Unsloth) is the proven result: eval 9.8 -> 13.5 HPS. User requires
+current-gen models -> TRL 1.12 + PEFT + vLLM 0.27.1 colocate stack (env/train_trl.py) validated with Qwen3.5-4B (12 steps,
+43 s/step on A6000). 9B does not fit colocated on 48GB -> needs A100 80GB. A6000 destroyed. 3090 #49632685 bootstrapping
+for the 4B recipe run (max_new 2500, colorMode no-op). Spend ~$2.5 of $7.29. Deliverables done: before_after.png,
+progression_*.mp4 per subject, paints_itself_*.mp4, docs/writeup.md (draft). Docker image blocked on gh workflow scope.
 
 ## Architecture
 - Decision: plain p5.js 2D, not p5.brush. Why: p5.brush needs WEBGL; headless software GL is a rabbit hole. See log 2026-09-01.

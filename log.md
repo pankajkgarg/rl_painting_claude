@@ -70,3 +70,9 @@ TRL colocate: policy (18GB bf16) loads first, then vLLM wants 0.45*47=21GB but o
 User refreshed gh token with workflow scope. Package will be private (repo is private); user must set package visibility public in GitHub UI once, or vast needs --login.
 ## [2026-09-02 21:35] bug | image build: "No space left on device" on GH runner
 pytorch base (8GB) + vllm's own torch cu130 (8GB) + nvidia wheels exceeded the 14GB runner disk. Fix: FROM python:3.11-slim-bookworm; jlumbroso/free-disk-space; docker data-root -> /mnt. Rebuild pushed.
+## [2026-09-02 21:50] bug | 3090 #49632685 (host 155125): network dead (pypi 0 B/s, HF 377 B/s), pip install vllm hung ~2h -> destroyed
+Two bad 3090 hosts in a row (docker pull failure, dead network). New filter: inet_down>800, disk 150GB, exclude hosts 155125. Cost of the dead box ~$0.25.
+## [2026-09-02 22:05] decision | repo made public (user ok) so ghcr image inherits public visibility
+Secret scan of tracked files clean. temp/hold/image.yml untracked. Image rebuild (run 33625108345) in progress with slim base.
+## [2026-09-02 22:15] bug | my "dead network" test was wrong: curl without -L on an HF resolve URL measures the 302 body
+Host 155125 was probably fine (6.7GB of site-packages installed = real progress). Lesson: `curl -sL --max-time 20 -o /dev/null -w %{speed_download}` on a real file. New 3090 #49640451: vast ssh proxy denies the key; direct 154.64.230.50:51784 works.

@@ -10,7 +10,8 @@ case "$1" in
   push)   $SCP env/render.py env/reward_v1.py env/train.py env/p5.min.js temp/sk/good.js temp/sk/flatflower.js out_v0/samples/s0011_best_0.53.js root@$HOST:/root/env/ ;;
   smoke)  $SSH 'cd /root/env && RLPAINT_CONC=8 python reward_v1.py good.js flatflower.js s0011_best_0.53.js 2>&1 | grep -E "reward=|Error|Traceback"' ;;
   train)  shift; $SSH "cd /root/env && RLPAINT_CONC=8 RLPAINT_VLLM=${RLPAINT_VLLM:-0} nohup python train.py $* > /root/train.log 2>&1 &"; echo launched ;;
-  poll)   $SSH 'grep -aE "reward\]|TRAIN_DONE|Traceback|Error|thinking disabled" /root/train.log | grep -v Warning | tail -${2:-8}; nvidia-smi --query-gpu=memory.used,utilization.gpu --format=csv,noheader' ;;
+  train_trl) shift; $SSH "cd /root/env && RLPAINT_CONC=6 HF_HUB_OFFLINE=1 nohup python train_trl.py $* > /root/train_trl.log 2>&1 < /dev/null &"; echo launched ;;
+  poll)   $SSH 'grep -aE "reward\]|TRAIN_DONE|Traceback|Error" /root/train_trl.log /root/train.log 2>/dev/null | grep -v Warning | tail -${2:-8}; nvidia-smi --query-gpu=memory.used,utilization.gpu --format=csv,noheader' ;;
   pull)   mkdir -p out/samples; $SCP root@$HOST:/root/out/rewards.jsonl out/ 2>/dev/null || true; rsync -a -e "ssh -o StrictHostKeyChecking=no -p $PORT" root@$HOST:/root/out/samples/ out/samples/ ; echo "pulled $(ls out/samples | wc -l | tr -d ' ') files" ;;
   ssh)    shift; $SSH "$@" ;;
   destroy) vastai destroy instance $ID ;;

@@ -76,3 +76,5 @@ Two bad 3090 hosts in a row (docker pull failure, dead network). New filter: ine
 Secret scan of tracked files clean. temp/hold/image.yml untracked. Image rebuild (run 33625108345) in progress with slim base.
 ## [2026-09-02 22:15] bug | my "dead network" test was wrong: curl without -L on an HF resolve URL measures the 302 body
 Host 155125 was probably fine (6.7GB of site-packages installed = real progress). Lesson: `curl -sL --max-time 20 -o /dev/null -w %{speed_download}` on a real file. New 3090 #49640451: vast ssh proxy denies the key; direct 154.64.230.50:51784 works.
+## [2026-09-02 22:40] status | Docker image built: ghcr.io/pankajkgarg/rlpaint:latest (GH Actions run 33625108345, slim base)
+Contains vllm 0.27.1 + torch 2.13 cu130, trl 1.12, transformers latest, flashinfer patch, Chromium, HPSv2.1, SigLIP2, env/*.py. Model weights fetched at instance start (env/vast_launch_image.sh onstart).

@@ -1,0 +1,10 @@
+.venv/
+temp/
+trash/
+out*/
+env/*.pt
+env/*.pth
+env/__pycache__/
+docs/*.mp4
+docs/*.html
+*.log

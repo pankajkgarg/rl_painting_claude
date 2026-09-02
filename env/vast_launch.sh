@@ -1,12 +1,10 @@
 #!/usr/bin/env bash
-# Paid fallback: rent a cheap RTX 3090 on vast.ai (~$0.11-0.18/hr), run train.py with vLLM fast_inference.
-# Requires: vastai CLI logged in + balance (>= $3 is plenty for a 100-step run).
-# Usage: env/vast_launch.sh            # picks cheapest verified 3090, prints instance id
+# Rent a GPU on vast.ai with the pinned onstart. Usage: GPU=80 env/vast_launch.sh   (GPU=48 default)
 set -euo pipefail
 cd "$(dirname "$0")/.."
-OFFER=$(vastai search offers 'gpu_name=RTX_3090 num_gpus=1 rentable=true verified=true disk_space>=50 inet_down>300 reliability>0.98' -o 'dph' --raw | python3 -c "import json,sys;print(json.load(sys.stdin)[0]['id'])")
-echo "offer $OFFER"
-vastai create instance "$OFFER" --image pytorch/pytorch:2.5.1-cuda12.4-cudnn9-devel --disk 50 --ssh --direct \
-  --onstart-cmd 'pip install -q unsloth trl vllm playwright open_clip_torch && python -m playwright install --with-deps chromium'
-echo "then: vastai scp <id> env/ /root/env ; ssh in; cd /root/env && RLPAINT_VLLM=1 nohup python train.py --steps 100 --gens 8 > train.log &"
-echo "ALWAYS: vastai destroy instance <id> when done."
+GPU=${GPU:-48}
+if [ "$GPU" = "80" ]; then NAMES='[A100_SXM4,A100_PCIE,H100_SXM,H100_PCIE,H100_NVL,H200]'; MINRAM=79000; else NAMES='[L40,L40S,RTX_6000Ada,A6000,RTX_A6000,A40]'; MINRAM=44000; fi
+OFFER=$(vastai search offers "gpu_name in $NAMES num_gpus=1 rentable=true verified=true disk_space>=80 inet_down>300 reliability>0.97 cuda_max_good>=12.8" -o 'dph' --raw \
+  | python3 -c "import json,sys;d=[o for o in json.load(sys.stdin) if o['gpu_ram']>=$MINRAM];o=d[0];print(o['id']);print(o['gpu_name'],o['dph_total'],o['gpu_ram'],file=sys.stderr)")
+vastai create instance "$OFFER" --image pytorch/pytorch:2.8.0-cuda12.8-cudnn9-devel --disk 80 --ssh --direct --onstart env/vast_onstart.sh --raw
+echo "then: VAST_ID=<id> env/vast_run.sh push; wait for /root/READY; env/vast_run.sh train ...; env/vast_run.sh destroy"

@@ -11,6 +11,15 @@ RUN pip install "vllm==0.27.1" && \
 # flashinfer ships a py3.12-only annotation (array.array[int]); quote it so py3.11 can import it.
 RUN F=$(python -c "import flashinfer,os;print(os.path.join(os.path.dirname(flashinfer.__file__),'comm','fd_exchange.py'))") && \
     sed -i -E 's/array\.array\[[A-Za-z_]+\]/"&"/g' "$F" && python -c "import ast,sys; ast.parse(open('$F').read())"
+# TRL 0.24 vs transformers 5.5: _is_package_available now returns a tuple (truthy) -> TRL thinks every optional dep exists.
+RUN F=$(python -c "import trl,os;print(os.path.join(os.path.dirname(trl.__file__),'import_utils.py'))") && \
+    python - "$F" <<'PY'
+import sys; p=sys.argv[1]; s=open(p).read()
+s=s.replace("from transformers.utils.import_utils import _is_package_available\n",
+"from transformers.utils.import_utils import _is_package_available as _tf_is_package_available\n\ndef _is_package_available(pkg_name, return_version=False):\n    r = _tf_is_package_available(pkg_name, return_version=True)\n    return r if return_version else bool(r[0])\n",1)
+open(p,"w").write(s)
+PY
+RUN python -c "from trl.trainer.grpo_trainer import GRPOTrainer" 2>&1 | tail -1
 RUN python -m playwright install --with-deps chromium
 # scorers baked in (2GB HPSv2.1 + 1.5GB SigLIP2); LLM weights are fetched at start (fast on vast, keeps image small)
 RUN mkdir -p /root/env /root/out && \

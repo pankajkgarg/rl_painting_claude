@@ -54,3 +54,7 @@ Per subject trained/base: hibiscus 13.97/10.21, poppy 15.49/11.18, iris 11.85/8.
 "Fast inference is only supported for Language models and Qwen2.5-VL, Qwen3-VL, Gemma3, Mistral3". vLLM 0.27 itself supports Qwen3.5. Fix: env/train_trl.py = plain TRL GRPOTrainer + PEFT LoRA + use_vllm colocate (no Unsloth). Smoke with Qwen/Qwen3.5-4B 12 steps on the A6000; if OK, 9B (needs 2 weight copies: ~18+~22GB -> likely 80GB card).
 ## [2026-09-02 18:10] bug | TRL 0.24 + transformers 5.5: _is_package_available returns a tuple -> truthy -> phantom imports (vllm_ascend, mergekit)
 Patched trl/import_utils.py with a wrapper returning bool; same patch added to docker/Dockerfile. TRL-native GRPO (train_trl.py, vLLM colocate) smoke with Qwen/Qwen3.5-4B relaunched.
+## [2026-09-02 18:30] fix | TRL 0.24 vs vllm 0.27: GuidedDecodingParams renamed StructuredOutputsParams
+try/except alias in grpo/online_dpo/rloo trainers + vllm_serve. Mirrored in env/vast_onstart.sh and docker/Dockerfile. Smoke (Qwen/Qwen3.5-4B, TRL-native, vLLM colocate) relaunched.
+## [2026-09-02 19:00] decision | drop Unsloth for current-gen models; TRL 1.12 + PEFT + vLLM 0.27.1 colocate
+TRL 0.24 (unsloth's pin) hit 4 incompatibilities in a row (vllm_ascend phantom import, mergekit, GuidedDecodingParams rename, warnings_issued). pip install -U trl -> 1.12.0 + transformers 5.16.1; imports clean with vllm 0.27.1. Unsloth now incompatible on the box (fine: v1.1 LoRA saved). Dockerfile + onstart switched to this stack.

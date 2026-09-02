@@ -57,7 +57,8 @@ cfg = GRPOConfig(
     gradient_accumulation_steps=1, num_generations=args.gens, max_prompt_length=512, max_completion_length=args.max_new,
     max_steps=args.steps, save_steps=args.save_every, save_total_limit=2, report_to="none", bf16=True,
     gradient_checkpointing=True, temperature=1.0, beta=0.0, mask_truncated_completions=True,
-    use_vllm=True, vllm_mode="colocate", vllm_gpu_memory_utilization=args.vllm_mem, vllm_max_model_len=args.max_new + 768,
+    use_vllm=True, vllm_mode="colocate", vllm_gpu_memory_utilization=args.vllm_mem,
+    **({"vllm_max_model_length": args.max_new + 768} if "vllm_max_model_length" in GRPOConfig.__dataclass_fields__ else {}),
 )
 trainer = GRPOTrainer(model=args.model, processing_class=tokenizer, reward_funcs=[reward_fn], args=cfg, train_dataset=ds, peft_config=peft_cfg)
 trainer.train()

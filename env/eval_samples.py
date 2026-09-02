@@ -24,7 +24,13 @@ def main():
     lreq = LoRARequest("lora", 1, a.lora) if a.lora else None
     results = []
     for si, subj in enumerate(tp.SUBJECTS):
-        prompt = tok.apply_chat_template(tp.make_prompt(subj), tokenize=False, add_generation_prompt=True)
+        # identical to train.py's render_prompt: no-think template + empty think block if the template lacks one
+        try:
+            prompt = tok.apply_chat_template(tp.make_prompt(subj), tokenize=False, add_generation_prompt=True, enable_thinking=False)
+        except TypeError:
+            prompt = tok.apply_chat_template(tp.make_prompt(subj), tokenize=False, add_generation_prompt=True)
+        if "</think>" not in prompt[-40:]:
+            prompt += "<think>\n\n</think>\n\n"
         outs = llm.generate([prompt], sp, lora_request=lreq)[0].outputs
         texts = [o.text for o in outs]
         rs, info = score(texts, subj)

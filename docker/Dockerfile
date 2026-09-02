@@ -10,12 +10,12 @@ RUN pip install "vllm==0.27.1" && \
     pip install "transformers==5.5.0"
 # flashinfer ships a py3.12-only annotation (array.array[int]); quote it so py3.11 can import it.
 RUN F=$(python -c "import flashinfer,os;print(os.path.join(os.path.dirname(flashinfer.__file__),'comm','fd_exchange.py'))") && \
-    sed -i -E 's/array\.array\[[A-Za-z_]+\]/"&"/g' "$F" && python -c "import vllm.compilation.backends"
+    sed -i -E 's/array\.array\[[A-Za-z_]+\]/"&"/g' "$F" && python -c "import ast,sys; ast.parse(open('$F').read())"
 RUN python -m playwright install --with-deps chromium
 # scorers baked in (2GB HPSv2.1 + 1.5GB SigLIP2); LLM weights are fetched at start (fast on vast, keeps image small)
 RUN mkdir -p /root/env /root/out && \
     curl -sL -o /root/env/HPS_v2.1_compressed.pt https://huggingface.co/xswu/HPSv2/resolve/main/HPS_v2.1_compressed.pt && \
     python -c "from transformers import AutoModel, AutoProcessor; AutoModel.from_pretrained('google/siglip2-base-patch16-224'); AutoProcessor.from_pretrained('google/siglip2-base-patch16-224')"
-COPY env/render.py env/reward_v1.py env/train.py env/p5.min.js /root/env/
+COPY env/render.py env/reward_v1.py env/train.py env/train_prompt.py env/eval_samples.py env/animate.py env/p5.min.js /root/env/
 WORKDIR /root/env
 CMD ["sleep", "infinity"]

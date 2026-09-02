@@ -1,8 +1,9 @@
 # RL-paints-p5js training image for vast.ai. Pins the stack that worked on 2026-09-02 (see log.md).
 # Build: GitHub Actions (.github/workflows/image.yml) -> ghcr.io/<owner>/rlpaint:latest
-FROM pytorch/pytorch:2.8.0-cuda12.8-cudnn9-devel
-ENV DEBIAN_FRONTEND=noninteractive PIP_NO_CACHE_DIR=1 HF_HUB_ENABLE_HF_TRANSFER=1
-RUN apt-get update -qq && apt-get install -y -qq curl rsync openssh-server && rm -rf /var/lib/apt/lists/*
+# slim base: vllm pins its own torch (2.13+cu130), so a pytorch base image would just be 8GB of dead weight
+FROM python:3.11-slim-bookworm
+ENV DEBIAN_FRONTEND=noninteractive PIP_NO_CACHE_DIR=1 HF_HUB_ENABLE_HF_TRANSFER=1 PYTHONUNBUFFERED=1
+RUN apt-get update -qq && apt-get install -y -qq curl rsync git openssh-server libgomp1 build-essential && rm -rf /var/lib/apt/lists/*
 # vllm 0.27.1 pins torch 2.13+cu130. TRL 1.12 targets transformers 5.x. (Unsloth 2026.8 pins trl<=0.24, which is
 # incompatible with transformers 5.5+ and vllm 0.27, so this image uses plain TRL+PEFT: env/train_trl.py.)
 RUN pip install "vllm==0.27.1" && \

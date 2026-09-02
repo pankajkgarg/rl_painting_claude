@@ -66,3 +66,7 @@ But ok only 0-1/8: truncation at 1400 tok (Qwen3.5 writes long commented code; c
 `vastai destroy` needs `echo y |` (interactive confirm). Search filter `host_id!=` breaks the query parser.
 ## [2026-09-02 20:40] decision | A6000 #49613475 destroyed; 9B needs 80GB
 TRL colocate: policy (18GB bf16) loads first, then vLLM wants 0.45*47=21GB but only 11.9GB free -> ValueError. Sleep mode does not help at startup. Plan: 4B recipe validation on 3090 #49632685 ($0.11/hr), then one 9B run on an A100 80GB (~$0.95/hr) via env/vast_launch.sh GPU=80. A6000 total: ~4.9h, ~$2.35.
+## [2026-09-02 21:25] status | Docker image build started on GitHub Actions (run 33624425666) -> ghcr.io/pankajkgarg/rlpaint:latest
+User refreshed gh token with workflow scope. Package will be private (repo is private); user must set package visibility public in GitHub UI once, or vast needs --login.
+## [2026-09-02 21:35] bug | image build: "No space left on device" on GH runner
+pytorch base (8GB) + vllm's own torch cu130 (8GB) + nvidia wheels exceeded the 14GB runner disk. Fix: FROM python:3.11-slim-bookworm; jlumbroso/free-disk-space; docker data-root -> /mnt. Rebuild pushed.

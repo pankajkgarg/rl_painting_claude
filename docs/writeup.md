@@ -30,7 +30,16 @@ Surya's recipe: GRPO, p5.brush sketches rendered with Puppeteer, reward = 0.05 c
 | v1 | Qwen3-8B | vast.ai RTX A6000 + vLLM (32 s/step) | HPSv2.1 + SigLIP2 ranks | 100 | HPS +1 pt. Most rollouts blank: HSB colorMode with alpha scaled 0-100, then alpha 0.3. Naive concentric ellipses. |
 | v1.1 | Qwen3-4B-Instruct-2507 | same box (20 s/step) | same + forbid colorMode/pixels, technique prompt, lr 2e-5 | 150 | HPS 10.7 -> 13.6, render success 79% -> 96%. Layered petals, textured backgrounds, per-subject variety. |
 
-EVAL_PLACEHOLDER
+### Before vs after (v1.1 adapter, 12 samples per prompt, identical prompts, scored by HPSv2.1)
+
+| | renders ok | mean HPS | best HPS |
+|---|---|---|---|
+| base Qwen3-4B-Instruct-2507 | 47/60 (78%) | 9.8 | 14.9 |
+| + 150 GRPO steps (LoRA r16) | 53/60 (88%) | 13.5 | 17.8 |
+
+Per subject, trained vs base: hibiscus 14.0 vs 10.2, poppy field 15.5 vs 11.2, iris 11.9 vs 8.4, sunflower 13.5 vs 9.3, tulip 12.7 vs 10.2. For scale: a hand-written watercolour sketch scores 17.6, flat clip-art 16.9, the v0 discs 12-13, random scribbles 1.3.
+
+![before/after](before_after.png)
 
 ## What actually mattered
 
@@ -42,7 +51,13 @@ EVAL_PLACEHOLDER
 
 ## Cost
 
-COST_PLACEHOLDER
+| Item | Cost |
+|---|---|
+| Colab free T4 (v0, 22 steps; two sessions reclaimed) | $0 |
+| vast.ai RTX A6000 48GB at $0.48/hr: setup 20 min, three failed launches (~50 min), v1 (53 min), v1.1 (50 min), two eval passes, idle gaps | ~$1.65 through v1.1 |
+| Reward models (HPSv2.1, SigLIP2), judge calls | $0 |
+
+Roughly a third of the GPU spend was debugging the stack (Qwen3.5 thinking mode, vLLM 0.28 vs Unsloth, flashinfer on Python 3.11). The pinned Docker image removes that for the next person.
 
 ## Reproduce
 
